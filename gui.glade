@@ -4,14 +4,14 @@
   <!-- interface-naming-policy project-wide -->
   <object class="GtkListStore" id="liststore">
     <columns>
-      <!-- column-name datez -->
-      <column type="gchar"/>
+      <!-- column-name znum -->
+      <column type="gchararray"/>
+      <!-- column-name zdate -->
+      <column type="gchararray"/>
       <!-- column-name summ -->
-      <column type="gchar"/>
-      <!-- column-name cs -->
-      <column type="gchar"/>
-      <!-- column-name < -->
-      <column type="&lt; определите новый столбец &gt;"/>
+      <column type="gchararray"/>
+      <!-- column-name csum -->
+      <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkWindow" id="window">

@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 #!/usr/bin/env python -O
 
-import pygtk
 try:
       	import pygtk
         pygtk.require('2.0')
@@ -20,15 +19,25 @@ class Guifp:
     def select_file(self, widget):
         self.entry.set_text('')
         f=open(self.filechoiserbutton.get_filename(), 'rb')
-        seek=5120
+        start=5120
+        max=27120
         data=[]
-        for i in range(11):
+        
+        for seek in range(start, max):
             f.seek(seek)
-            seek=seek+1
             data.append(ord(f.read(1)))
-        for i in data:
-            get=self.entry.get_text()+str(hex(i))[2:]
-            self.entry.set_text(get)
+        #Хуячим в лоб!!! Тупо, пол бутылки вина - оправданье.
+        # Ни когда не смотреть сюда - хуйня
+        for i in range(0,2000):#бля!!! тут должен быть класс... сука- там только 2000 z-отчетов
+            count=i*11 #быдло код, типа выясняем порядковый номер зетки, бля... только не забыть прибавить 1
+            corr=data[count:count+11]#это список. Eжу понятно, строчками ниже вспоминаем битовую математику, нам надо xor-ить и выкинуть стырший разряд
+            """Тут настал -пиздец.... Вино кончилось, понесся костыльный быдл код"""
+            correct=corr[0]
+            for ii in range(9):
+                correct=correct^corr[ii+1]
+
+        self.entry.set_text(str(correct))
+
         f.close()
 
 
