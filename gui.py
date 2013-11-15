@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 #!/usr/bin/env python -O
-
+import re
 try:
       	import pygtk
         pygtk.require('2.0')
@@ -48,18 +48,88 @@ class Guifp:
             self.treeview.show_all()
 
         f.close()
+    def key_treeview(self,widget, event):
+        key=gtk.gdk.keyval_name(event.keyval)
+        if key=="Return":
+            self.test.set_text("OK")
+            treeselection=self.treeview.get_selection()
+            mode=treeselection.get_mode()
+            (model, iter)=treeselection.get_selected()
+            self.test.set_text('Редактируем смену №: %s'%model[iter][0])
+            self.redow.show()
+            self.window.set_sensitive(0)
+            iter=self.listredo.append([model[iter][1], model[iter][2], True])
 
+    def close_child(self, widget, data=None):
+        self.redow.hide()
+        self.window.set_sensitive(1)
+        return True
+    def row_change(self, cell, path, text,data):
+        liststore, column =data
+        liststore[path][column]=text
+        return
+    def save(self, widget):
+        treeselection=self.treechild.get_selection()
+        (model, iter)=treeselection.get_selected()
+        date=model[iter][0]
+        summ=model[iter][1]
+        treeselection=self.treeview.get_selection()
+        (model, iter)=treeselection.get_selected()
+        model[iter][1]=date
+        model[iter][2]=summ
+        sp=date.split('/')
+        data=[]
+        for i in sp:
+            data.append(int(i,16))
+        sp=summ.split('.')
+        data.append(int(sp[1], 16))
+        if len(sp[0])%2==1:
+            sp='0'+sp[0]
+        else:
+            sp=sp[0]
+        sp=re.findall('(\d{2})', sp)
+        sp.reverse()
+        for i in range(len(sp)):
+            sp[i]=int(sp[i],16)
+        data=data+sp
+        for i in range(10-len(data)):
+            data.append(0)
+
+        corr=0
+        st=''
+        for i in data:
+            corr+=i
+            st+=st+' '+str(i)
+        c=corr&0x00FF
+        c+=0xaa
+        self.test.set_text("дата: %s"%(st))
+
+
+        self.redow.hide()
+        self.window.set_sensitive(1)
+        return True
 
     def __init__(self):
         self.builder=gtk.Builder()
         self.builder.add_from_file('gui.glade')
         self.window=self.builder.get_object('window')
         self.window.set_size_request(400,400)
+        self.redow=self.builder.get_object('redow')
         self.entry=self.builder.get_object('entry')
 
+
+        self.cancel=self.builder.get_object('cancel')
+        self.cancel.connect('clicked', self.close_child)
+        self.btsave=self.builder.get_object('save')
+        self.btsave.connect('clicked', self.save)
+
+        self.test=self.builder.get_object('test')
+
         self.listore=self.builder.get_object('liststore')
+        self.listredo=self.builder.get_object('listredo')
         self.modelfilter=self.listore.filter_new()
         self.treeview=self.builder.get_object('treeview')
+        self.treechild=self.builder.get_object('treechild')
         self.filechoiserbutton=self.builder.get_object("filechooserbutton")
         self.filechoiserbutton.connect("file-set", self.select_file)
 
@@ -77,9 +147,27 @@ class Guifp:
 
         column=gtk.TreeViewColumn("Контрольная сумма", trc[3], text=3)
         self.treeview.append_column(column)
+
+        self.treeview.connect('key_release_event', self.key_treeview)
+        self.redow.connect('destroy', self.close_child)
+        self.redow.connect('delete_event', self.close_child)
+
+        reotcr=[]
+        for i in range(2):
+            reotcr.append(gtk.CellRendererText())
+
+        model=self.treechild.get_model()
+        reotcr[0].connect('edited', self.row_change, (model,0))
+        column=gtk.TreeViewColumn("Дата", reotcr[0], text=0, editable=2)
+        self.treechild.append_column(column)
+
+        column=gtk.TreeViewColumn("Сумма", reotcr[1], text=1, editable=2)
+        self.treechild.append_column(column)
+
+
         if(self.window):
             self.window.connect('destroy', self.close_app)
-        self.window.show_all()
+        self.window.show()
 
     def main(self):
         gtk.main()
